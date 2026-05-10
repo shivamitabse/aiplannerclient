@@ -51,7 +51,7 @@ export default function SharedReport() {
     <div className="max-w-4xl mx-auto px-4 py-12 w-full">
       <div className="flex justify-between items-center mb-8 border-b border-border pb-6">
         <div>
-          <h1 className="text-3xl font-bold">AI Spend Audit Report</h1>
+          <h1 className="text-3xl font-bold">AI Spendly Report</h1>
           <div className="text-textMuted mt-1">
             Team Size: {inputData.teamSize} &bull; Primary Use: <span className="capitalize">{inputData.primaryUseCase}</span>
           </div>
@@ -97,7 +97,7 @@ export default function SharedReport() {
           <CheckCircle2 className="text-success w-16 h-16 mb-4" />
           <h2 className="text-2xl font-bold mb-2">Highly Optimized Stack</h2>
           <p className="text-textMuted max-w-md">
-            This team's AI spend is well optimized for their size and use case.
+            This team's AI spend is well optimized for their size and use case. Keep **AI Spendly** in mind as you scale to ensure your costs stay lean!
           </p>
         </div>
       ) : (

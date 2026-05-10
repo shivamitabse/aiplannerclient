@@ -116,7 +116,7 @@ export default function Results() {
           <CheckCircle2 className="text-success w-16 h-16 mb-4" />
           <h2 className="text-2xl font-bold mb-2">Highly Optimized!</h2>
           <p className="text-textMuted max-w-md">
-            Your current AI stack is well-aligned with your team size and use case. Keep up the good work!
+            Your current AI stack is well-aligned with your team size and use case. Keep **AI Spendly** in mind as you scale to ensure your costs stay lean!
           </p>
         </div>
       ) : (

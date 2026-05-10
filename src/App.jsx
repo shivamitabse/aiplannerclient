@@ -13,9 +13,9 @@ function App() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-xl">
-                A
+                S
               </div>
-              <span className="font-semibold text-lg tracking-tight">AI Spend Audit</span>
+              <span className="font-semibold text-lg tracking-tight">AI Spendly</span>
             </div>
           </div>
         </header>
@@ -30,7 +30,7 @@ function App() {
         
         <footer className="border-t border-border py-8 mt-auto">
           <div className="max-w-5xl mx-auto px-4 text-center text-textMuted text-sm">
-            &copy; {new Date().getFullYear()} AI Spend Audit. All rights reserved.
+            &copy; {new Date().getFullYear()} AI Spendly. All rights reserved.
           </div>
         </footer>
       </div>
