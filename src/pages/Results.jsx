@@ -61,7 +61,7 @@ export default function Results() {
       };
       const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/lead`, payload);
       
-      const url = `${window.location.origin}/audit/${res.data.reportId}`;
+      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/share/${res.data.reportId}`;
       setShareUrl(url);
     } catch (err) {
       console.error(err);
