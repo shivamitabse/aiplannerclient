@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CheckCircle2, AlertTriangle, ArrowLeft, Mail, Share2, Sparkles } from 'lucide-react';
@@ -15,6 +15,8 @@ export default function Results() {
   const [role, setRole] = useState('');
   const [leadLoading, setLeadLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState(null);
+  const [isConsultation, setIsConsultation] = useState(false);
+  const leadFormRef = useRef(null);
 
   useEffect(() => {
     if (!location.state || !location.state.auditResults) {
@@ -54,7 +56,8 @@ export default function Results() {
       const payload = {
         email, company, role,
         auditData: { auditResults, inputData },
-        summary
+        summary,
+        isConsultation
       };
       const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/lead`, payload);
       
@@ -66,6 +69,22 @@ export default function Results() {
     } finally {
       setLeadLoading(false);
     }
+  };
+
+  const handleBookConsultation = () => {
+    setIsConsultation(true);
+    if (leadFormRef.current) {
+      leadFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Find the email input and focus it
+      const emailInput = leadFormRef.current.querySelector('input[type="email"]');
+      if (emailInput) emailInput.focus();
+    }
+  };
+
+  const handleTwitterShare = () => {
+    const text = `I just found potential savings of $${totalAnnualSavings.toLocaleString()}/year on my AI spend using AI Spendly! Check out my full report:`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(url, '_blank');
   };
 
   const isOptimized = recommendations.length === 0 || (recommendations.length === 1 && recommendations[0].tool === 'General');
@@ -152,37 +171,65 @@ export default function Results() {
           <p className="text-textMuted mb-6 max-w-lg mx-auto">
             Our experts can help you migrate to a more cost-effective API architecture without losing productivity.
           </p>
-          <button className="btn-primary">Book a Free Consultation</button>
+          <button 
+            onClick={handleBookConsultation}
+            className="btn-primary"
+          >
+            Book a Free Consultation
+          </button>
         </div>
       )}
 
       {/* Lead Capture */}
-      <div className="card bg-surfaceHighlight/30 border-border max-w-2xl mx-auto">
+      <div 
+        ref={leadFormRef}
+        className={`card max-w-2xl mx-auto transition-all duration-500 ${isConsultation ? 'border-primary shadow-primary/20 bg-primary/5 ring-1 ring-primary/50' : 'bg-surfaceHighlight/30 border-border'}`}
+      >
         {shareUrl ? (
           <div className="text-center py-6">
             <CheckCircle2 className="text-success w-12 h-12 mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Report Saved!</h3>
-            <p className="text-textMuted mb-6">We've emailed you a copy of this report.</p>
-            <div className="bg-surface p-4 rounded-lg flex items-center justify-between border border-border">
-              <span className="truncate text-sm text-textMuted mr-4">{shareUrl}</span>
-              <button 
-                onClick={() => navigator.clipboard.writeText(shareUrl)}
-                className="btn-secondary flex items-center gap-2 text-sm py-1.5"
-              >
-                <Share2 size={14} /> Copy
-              </button>
+            <h3 className="text-xl font-bold mb-2">
+              {isConsultation ? 'Consultation Booked!' : 'Report Saved!'}
+            </h3>
+            <p className="text-textMuted mb-6">
+              {isConsultation ? "We've received your request and emailed you the report." : "We've emailed you a copy of this report."}
+            </p>
+            <div className="bg-surface p-4 rounded-lg flex flex-col sm:flex-row items-center gap-3 border border-border">
+              <span className="truncate text-sm text-textMuted flex-1 text-left w-full sm:w-auto">{shareUrl}</span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button 
+                  onClick={() => navigator.clipboard.writeText(shareUrl)}
+                  className="btn-secondary flex items-center justify-center gap-2 text-sm py-1.5 flex-1 sm:flex-initial"
+                >
+                  <Share2 size={14} /> Copy
+                </button>
+                <button 
+                  onClick={handleTwitterShare}
+                  className="bg-black hover:bg-zinc-800 text-white px-3 py-1.5 rounded-md font-medium transition-colors flex items-center justify-center gap-2 text-sm flex-1 sm:flex-initial"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  Share
+                </button>
+              </div>
             </div>
           </div>
         ) : (
           <div>
             <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="p-2 bg-primary/20 rounded-full text-primary">
+              <div className={`p-2 rounded-full ${isConsultation ? 'bg-primary text-white' : 'bg-primary/20 text-primary'}`}>
                 <Mail size={24} />
               </div>
-              <h3 className="text-xl font-bold">Save & Share This Report</h3>
+              <h3 className="text-xl font-bold">
+                {isConsultation ? 'Book Your Free Consultation' : 'Save & Share This Report'}
+              </h3>
             </div>
             <p className="text-center text-textMuted mb-6 text-sm">
-              Enter your email to get a shareable public URL and keep this audit for your records.
+              {isConsultation 
+                ? 'Enter your details below to schedule your audit review and save this report.'
+                : 'Enter your email to get a shareable public URL and keep this audit for your records.'
+              }
             </p>
             
             <form onSubmit={handleLeadSubmit} className="space-y-4">
@@ -212,10 +259,10 @@ export default function Results() {
               </div>
               <button 
                 type="submit" 
-                className="btn-primary w-full py-3 mt-2"
+                className="btn-primary w-full py-3 mt-2 flex items-center justify-center gap-2"
                 disabled={leadLoading}
               >
-                {leadLoading ? 'Saving...' : 'Get My Report'}
+                {leadLoading ? 'Processing...' : (isConsultation ? 'Book Consultation & Save Report' : 'Get My Report')}
               </button>
             </form>
           </div>
