@@ -93,7 +93,41 @@ export default function Results() {
 
       if (leadError) throw leadError;
 
-      const url = `${window.location.origin}/audit/${reportId}`;
+      // Send Email via Resend
+      const reportUrl = `${window.location.origin}/audit/${reportId}`;
+      try {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: "AI Spendly <onboarding@resend.dev>",
+            to: email,
+            subject: isConsultation
+              ? "Consultation Request & AI Spend Audit"
+              : "Your AI Spend Audit Report",
+            html: `
+              <h1>${isConsultation ? "Consultation Request Received!" : "Your AI Spend Report is Ready!"}</h1>
+              <p>Hello,</p>
+              <p>Thank you for using AI Spendly. We've analyzed your stack and found potential savings of <strong>$${totalAnnualSavings.toLocaleString()}/year</strong>.</p>
+              <p>You can view your full breakdown and recommendations here: <a href="${reportUrl}">${reportUrl}</a></p>
+              <br/>
+              <p><strong>Audit Summary:</strong></p>
+              <p>${summary}</p>
+              <br/>
+              ${isConsultation ? "<p><em>Note: Our team will reach out shortly regarding your consultation request.</em></p>" : ""}
+              <p>Best regards,<br/>The AI Spendly Team</p>
+            `,
+          }),
+        });
+      } catch (emailErr) {
+        console.error("Email failed to send:", emailErr);
+        // We don't block the UI if email fails, as the report is already saved
+      }
+
+      const url = reportUrl;
       setShareUrl(url);
     } catch (err) {
       console.error(err);
