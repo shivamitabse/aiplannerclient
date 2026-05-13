@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, ArrowRight } from 'lucide-react';
-import axios from 'axios';
+import { performAudit } from '../lib/auditEngine';
 
 const AVAILABLE_TOOLS = [
   'Cursor', 'GitHub Copilot', 'Claude', 'ChatGPT', 'Anthropic API', 'OpenAI API', 'Gemini', 'Windsurf'
@@ -85,13 +85,14 @@ export default function SpendForm() {
         }))
       };
 
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/audit`, payload);
+      // RUN AUDIT LOCALLY
+      const auditResults = performAudit(payload);
       
       // Navigate to results page with data
-      navigate('/results', { state: { auditResults: response.data, inputData: payload } });
+      navigate('/results', { state: { auditResults, inputData: payload } });
     } catch (error) {
       console.error("Audit failed:", error);
-      alert("Failed to process audit. Is the backend running?");
+      alert("Failed to process audit locally.");
     } finally {
       setLoading(false);
     }

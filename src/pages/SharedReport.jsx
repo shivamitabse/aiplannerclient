@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
 import { AlertTriangle, Sparkles, CheckCircle2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function SharedReport() {
   const { id } = useParams();
@@ -12,8 +12,27 @@ export default function SharedReport() {
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/report/${id}`);
-        setReport(res.data);
+        const { data, error: sbError } = await supabase
+          .from('audits')
+          .select('*')
+          .eq('report_id', id)
+          .single();
+
+        if (sbError || !data) throw sbError || new Error("Not found");
+
+        // Format data to match expected structure
+        setReport({
+          summary: data.summary,
+          auditData: {
+            auditResults: {
+              recommendations: JSON.parse(data.recommendations),
+              totalMonthlySavings: data.total_monthly_savings,
+              totalAnnualSavings: data.total_annual_savings,
+              currentMonthlySpend: JSON.parse(data.data).tools.reduce((sum, t) => sum + Number(t.monthlySpend), 0)
+            },
+            inputData: JSON.parse(data.data)
+          }
+        });
       } catch (err) {
         console.error(err);
         setError(true);
