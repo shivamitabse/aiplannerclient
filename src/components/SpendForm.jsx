@@ -103,7 +103,21 @@ export default function SpendForm() {
       });
     } catch (error) {
       console.error("Audit failed:", error);
-      alert("Failed to process audit. Have you deployed the Supabase Edge Function?");
+      let errorMsg = "Unknown error";
+      
+      // Supabase Edge Functions return errors in the 'context' property
+      if (error.context) {
+        try {
+          const body = await error.context.json();
+          errorMsg = body.details || body.error || errorMsg;
+        } catch (e) {
+          errorMsg = await error.context.text();
+        }
+      } else {
+        errorMsg = error.message || errorMsg;
+      }
+
+      alert(`Failed to process audit: ${errorMsg}`);
     } finally {
       setLoading(false);
     }

@@ -20,21 +20,24 @@ export default function SharedReport() {
 
         if (sbError || !data) throw sbError || new Error("Not found");
 
-        // Format data to match expected structure
+        // Safely parse JSON data
+        const recommendations = typeof data.recommendations === 'string' ? JSON.parse(data.recommendations) : data.recommendations;
+        const inputData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+
         setReport({
           summary: data.summary,
           auditData: {
             auditResults: {
-              recommendations: JSON.parse(data.recommendations),
+              recommendations: recommendations || [],
               totalMonthlySavings: data.total_monthly_savings,
               totalAnnualSavings: data.total_annual_savings,
-              currentMonthlySpend: JSON.parse(data.data).tools.reduce((sum, t) => sum + Number(t.monthlySpend), 0)
+              currentMonthlySpend: inputData?.tools ? inputData.tools.reduce((sum, t) => sum + Number(t.monthlySpend || 0), 0) : 0
             },
-            inputData: JSON.parse(data.data)
+            inputData: inputData
           }
         });
       } catch (err) {
-        console.error(err);
+        console.error("REPORT FETCH ERROR:", err);
         setError(true);
       } finally {
         setLoading(false);
