@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, ArrowRight } from 'lucide-react';
-import { performAudit } from '../lib/auditEngine';
+import { supabase } from '../lib/supabase';
 
 const AVAILABLE_TOOLS = [
   'Cursor', 'GitHub Copilot', 'Claude', 'ChatGPT', 'Anthropic API', 'OpenAI API', 'Gemini', 'Windsurf'
@@ -85,14 +85,25 @@ export default function SpendForm() {
         }))
       };
 
-      // RUN AUDIT LOCALLY
-      const auditResults = performAudit(payload);
+      // CALL SUPABASE EDGE FUNCTION
+      const { data, error } = await supabase.functions.invoke('process-audit', {
+        body: payload
+      });
+
+      if (error) throw error;
       
-      // Navigate to results page with data
-      navigate('/results', { state: { auditResults, inputData: payload } });
+      // Navigate to results page with the server-calculated data
+      navigate('/results', { 
+        state: { 
+          auditResults: data.auditResults, 
+          summary: data.summary,
+          reportId: data.reportId,
+          inputData: payload 
+        } 
+      });
     } catch (error) {
       console.error("Audit failed:", error);
-      alert("Failed to process audit locally.");
+      alert("Failed to process audit. Have you deployed the Supabase Edge Function?");
     } finally {
       setLoading(false);
     }

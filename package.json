@@ -18,6 +18,7 @@
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.15.0",
     "resend": "^6.12.3",
+    "supabase": "^2.98.2",
     "uuid": "^14.0.0"
   },
   "devDependencies": {

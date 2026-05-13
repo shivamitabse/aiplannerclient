@@ -16,8 +16,8 @@ export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [summary, setSummary] = useState(null);
-  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [summary, setSummary] = useState(location.state?.summary || null);
+  const [loadingSummary, setLoadingSummary] = useState(!location.state?.summary);
 
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -32,31 +32,11 @@ export default function Results() {
       navigate("/");
       return;
     }
-
-    const fetchSummary = async () => {
-      try {
-        const { auditResults, inputData } = location.state;
-        const aiSummary = await generateAISummary(
-          inputData.teamSize,
-          inputData.tools,
-          auditResults,
-          inputData.primaryUseCase,
-        );
-        setSummary(aiSummary);
-      } catch (err) {
-        console.error(err);
-        setSummary("Error: Failed to generate AI summary. Please check your API configuration or quota.");
-      } finally {
-        setLoadingSummary(false);
-      }
-    };
-
-    fetchSummary();
   }, [location, navigate]);
 
   if (!location.state || !location.state.auditResults) return null;
 
-  const { auditResults, inputData } = location.state;
+  const { auditResults, inputData, reportId } = location.state;
   const {
     recommendations,
     totalMonthlySavings,
@@ -68,70 +48,25 @@ export default function Results() {
     e.preventDefault();
     setLeadLoading(true);
     try {
-      const reportId = uuidv4();
-      
-      // Save Audit Result
-      const { error: auditError } = await supabase.from("audits").insert({
-        report_id: reportId,
-        data: JSON.stringify(inputData),
-        summary,
-        recommendations: JSON.stringify(recommendations),
-        total_monthly_savings: totalMonthlySavings,
-        total_annual_savings: totalAnnualSavings,
+      const { data, error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          reportId,
+          email,
+          company,
+          role,
+          isConsultation,
+          totalAnnualSavings,
+          summary,
+        },
       });
 
-      if (auditError) throw auditError;
+      if (error) throw error;
 
-      // Save Lead
-      const { error: leadError } = await supabase.from("leads").insert({
-        report_id: reportId,
-        email,
-        company,
-        role,
-        is_consultation: isConsultation,
-      });
-
-      if (leadError) throw leadError;
-
-      // Send Email via Resend
-      const reportUrl = `${window.location.origin}/audit/${reportId}`;
-      try {
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            from: "AI Spendly <onboarding@resend.dev>",
-            to: email,
-            subject: isConsultation
-              ? "Consultation Request & AI Spend Audit"
-              : "Your AI Spend Audit Report",
-            html: `
-              <h1>${isConsultation ? "Consultation Request Received!" : "Your AI Spend Report is Ready!"}</h1>
-              <p>Hello,</p>
-              <p>Thank you for using AI Spendly. We've analyzed your stack and found potential savings of <strong>$${totalAnnualSavings.toLocaleString()}/year</strong>.</p>
-              <p>You can view your full breakdown and recommendations here: <a href="${reportUrl}">${reportUrl}</a></p>
-              <br/>
-              <p><strong>Audit Summary:</strong></p>
-              <p>${summary}</p>
-              <br/>
-              ${isConsultation ? "<p><em>Note: Our team will reach out shortly regarding your consultation request.</em></p>" : ""}
-              <p>Best regards,<br/>The AI Spendly Team</p>
-            `,
-          }),
-        });
-      } catch (emailErr) {
-        console.error("Email failed to send:", emailErr);
-        // We don't block the UI if email fails, as the report is already saved
-      }
-
-      const url = reportUrl;
+      const url = `${window.location.origin}/audit/${reportId}`;
       setShareUrl(url);
     } catch (err) {
       console.error(err);
-      alert("Failed to save report to Supabase: " + err.message);
+      alert("Failed to send report: " + err.message);
     } finally {
       setLeadLoading(false);
     }
