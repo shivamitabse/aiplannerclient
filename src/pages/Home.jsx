@@ -12,7 +12,7 @@ export default function Home() {
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
-            Stop overpayin for <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">AI tools</span>
+            Stop overpaying for <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">AI tools</span>
           </h1>
           <p className="text-xl text-textMuted max-w-2xl mx-auto mb-10 leading-relaxed">
             Startups waste thousands annually on redundant licenses and unoptimized API tiers. Get an instant, data-backed audit of your AI stack.
